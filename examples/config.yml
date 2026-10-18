@@ -1,0 +1,50 @@
+# mpv-tvh configuration
+#
+# Copy to ~/.config/mpv-tvh/config.yml and edit.
+# (Override the location with the MPV_TVH_CONFIG environment variable.)
+#
+# Each top-level key other than `tvheadend` is a player: `tv` and `radio` are
+# used by the `tv` and `radio` fish functions.
+#
+# Channels:
+#   name:    short name you type (`tv bbc1`)
+#   title:   shown in mpv and the playlist (defaults to name)
+#   uuid:    Tvheadend channel UUID, or
+#   url:     an internet stream URL (doesn't use the tuner, no EPG)
+#
+# The first eight channels map to pad keys 1-8 (F13-F20).
+# List Tvheadend channel UUIDs with:
+#   curl -s 'http://HOST:9981/api/channel/grid?limit=500' | jq -r '.entries[] | "\(.uuid)  \(.name)"'
+
+tvheadend:
+  host: 192.168.0.10:9981
+
+tv:
+  label: TV
+  default: bbc1                  # played by the TV launcher key (`tv --default`)
+  mpv_opts:
+    - --no-fullscreen
+    - --autofit=1280x720
+    - --ytdl=no
+  channels:
+    - name: bbc1
+      title: BBC ONE HD
+      uuid: "0123456789abcdef0123456789abcdef"
+    - name: bbc2
+      title: BBC TWO HD
+      uuid: "fedcba9876543210fedcba9876543210"
+
+radio:
+  label: Radio
+  default: radio4
+  mpv_opts:
+    - --force-window=yes
+    - --autofit=1280x720
+    - --ytdl=no
+  channels:
+    - name: radio4
+      title: BBC Radio 4
+      uuid: "00112233445566778899aabbccddeeff"
+    - name: atlantic252
+      title: Atlantic 252
+      url: https://stream4.themediasite.co.uk:8042/

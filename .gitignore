@@ -1,0 +1,2 @@
+# Personal config lives in ~/.config/mpv-tvh/, never in the repo
+*.local.yml

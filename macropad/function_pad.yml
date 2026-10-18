@@ -1,0 +1,17 @@
+model: ch57x-1
+orientation: normal
+rows: 3
+columns: 4
+knobs: 2
+layers:
+  - buttons:
+      - ["f13", "f14", "f15", "f16"]
+      - ["f17", "f18", "f19", "f20"]
+      - ["ctrl-alt-cmd-f13", "ctrl-alt-cmd-f16", "ctrl-alt-cmd-f17", "alt"]
+    knobs:
+      - ccw: "up"
+        press: "enter"
+        cw: "down"
+      - ccw: "ctrl-alt-cmd-f18"
+        press: "mute"
+        cw: "ctrl-alt-cmd-f19"
