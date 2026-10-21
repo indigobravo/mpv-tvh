@@ -1,0 +1,17 @@
+model: ch57x-1
+orientation: normal
+rows: 3
+columns: 4
+knobs: 2
+layers:
+  - buttons:
+      - ["f13", "f14", "f15", "f16"]
+      - ["f17", "f18", "f19", "f20"]
+      - ["ctrl-alt-cmd-f13", "ctrl-alt-cmd-f16", "ctrl-alt-cmd-f17", "alt"]
+    knobs:
+      - ccw: "ctrl-alt-cmd-f14"         # Hammerspoon: Up, or sideways in a guide/library
+        press: "enter"
+        cw: "ctrl-alt-cmd-f15"          # Down, or sideways
+      - ccw: "ctrl-alt-cmd-f18"
+        press: "ctrl-alt-cmd-f20"       # Hammerspoon: mute, or Enter in a guide/library
+        cw: "ctrl-alt-cmd-f19"

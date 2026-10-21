@@ -1,0 +1,59 @@
+# mpv-tvh defaults: used once SETUP has been run (there's a Tvheadend
+# address in ~/.config/mpv-tvh/presets.json) and there's no
+# ~/.config/mpv-tvh/config.yml. The demo (demo.yml) is used before that.
+#
+# The TV's and radio's channels are the presets (key 3 in the guide), so
+# there are none here. YouTube starts idle (paste a link on its faceplate),
+# and the CD and video players use ~/Music and its recordings folder. The
+# windows are laid out for a MacBook Air (pixels, Retina): the stack down the
+# left, the TV picture top right. For anything else, copy examples/config.yml
+# to ~/.config/mpv-tvh/config.yml.
+
+tvheadend:
+  host: ""
+
+tv:
+  label: TV
+  mpv_opts:
+    - --no-fullscreen
+    - --geometry=1400x788+1980+33
+    - --ytdl=no
+  panel_opts:
+    - --geometry=1816x182+40+417
+
+radio:
+  label: Radio
+  mpv_opts:
+    - --force-window=yes
+    - --geometry=1816x182+40+619
+    - --no-border
+    - --macos-app-activation-policy=accessory
+    - --ytdl=no
+
+youtube:
+  label: YouTube
+  mpv_opts:
+    - --ytdl-format=bestvideo[height<=1080]+bestaudio/best
+    - --hwdec=auto-safe
+  panel_opts:
+    - --geometry=1816x182+40+821
+
+music:
+  label: Music
+  mpv_opts: []
+  panel_opts:
+    - --geometry=1816x182+40+1023
+
+preamp:
+  panel_opts:
+    - --geometry=1816x364+40+33
+
+video:
+  label: Video
+  mpv_opts: []
+  panel_opts:
+    - --geometry=1816x182+40+1225
+
+recorder:
+  panel_opts:
+    - --geometry=1816x182+40+1427
