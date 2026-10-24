@@ -16,7 +16,7 @@
 --
 --   Pad key 2 shows the recordings instead: what's recording and scheduled
 --   (soonest first), then what's been recorded (newest first). WATCH plays
---   a recording in the video player, DELETE removes it from Tvheadend
+--   a recording on the TV (a channel key goes back to live), DELETE removes it from Tvheadend
 --   (press twice), CANCEL REC / STOP REC and CANCEL ALL as in the guide.
 --   Pad key 1 goes back to the guide.
 --
@@ -74,6 +74,7 @@ local function write_presets(p)
 end
 
 local TVH_HOST = read_presets().host or mp.get_opt("tvh-host") or ""
+local DEMO = (mp.get_opt("tvh-demo") or "") ~= ""      -- not set up yet: the demo's playing
 local SOCK       = "/tmp/mpv-" .. KIND
 local STATE      = "/tmp/mpv-" .. KIND .. ".state.json"
 local ALIVE      = "/tmp/mpv-" .. KIND .. ".lib.alive"
@@ -232,6 +233,10 @@ local filter = RADIO and "RADIO" or "ALL"
 local psel, ptop = 1, 0
 local presets = read_presets()
 local presets_dirty = false
+-- First setup: the keys are filled from Tvheadend's lineup (autofill), then
+-- the presets walk through the TV's keys (wizard "tv") and the radio's
+-- ("radio"): NEXT: RADIO, then DONE
+local autofill, wizard = false, nil
 local clear_confirm = 0
 -- SETUP: the address being typed
 local setup = { addr = "", finding = false, checking = false, first = false }
@@ -352,10 +357,12 @@ local function fetch_channels(then_)
         for _, c in ipairs(channels) do before[c.uuid or c.title] = c.events end
         channels = {}
         for i, e in ipairs(list) do
-            local uuid = (e.filename or ""):match("/stream/channel/(%w+)")
-            channels[#channels + 1] = { title = e.title or e.filename, uuid = uuid,
-                                        events = before[uuid or e.title] or {} }
-            if e.current or e.playing then playing = i end
+            if not (e.filename or ""):find("/dvrfile/", 1, true) then   -- not a recording playing
+                local uuid = (e.filename or ""):match("/stream/channel/(%w+)")
+                channels[#channels + 1] = { title = e.title or e.filename, uuid = uuid,
+                                            events = before[uuid or e.title] or {} }
+                if e.current or e.playing then playing = i end
+            end
         end
         if then_ then then_() end
         render()
@@ -532,6 +539,7 @@ local function show(v)                     -- pad keys 1, 2 and 3; SETUP
     if view == "setup" and TVH_HOST == "" and (v == "guide" or v == "recs") then return end   -- needs an address first
     if view == v then return end
     if view == "presets" or view == "streams" then apply_presets() end
+    if v ~= "presets" then wizard = nil end
     view = v
     if v == "recs" then fetch_recs() end
     if v == "presets" then presets = read_presets(); if not tvh_lineup then fetch_lineup() else merge_lineup() end end
@@ -548,10 +556,11 @@ local function rdone(what)
     end
 end
 
--- WATCH: in the video player (the preamp switches to it, starting it if
--- it isn't running), streamed from Tvheadend
-local function video_running()
-    local f = io.open("/tmp/mpv-video.state.json", "r")
+-- WATCH: in the TV window (the preamp switches to the TV, starting it if
+-- it isn't running), streamed from Tvheadend; a channel key goes back to
+-- live (player-state.lua)
+local function tv_running()
+    local f = io.open("/tmp/mpv-tv.state.json", "r")
     local s = f and utils.parse_json(f:read("*a") or "")
     if f then f:close() end
     return s and s.t and os.time() - s.t < 6 and not s.closed
@@ -561,9 +570,9 @@ local function rwatch()
     local e = rec_selected()
     if not e or e.state == "scheduled" then return end
     local url = "http://" .. TVH_HOST .. "/dvrfile/" .. e.uuid
-    local wait = video_running() and 0.3 or 4
-    send("/tmp/mpv-preamp", { "script-message", "preamp-select", "vid" })
-    mp.add_timeout(wait, function() send("/tmp/mpv-video", { "script-message", "music-add", url, "play" }) end)
+    local wait = tv_running() and 0.1 or 4
+    send("/tmp/mpv-preamp", { "script-message", "preamp-select", "tv" })
+    mp.add_timeout(wait, function() send("/tmp/mpv-tv", { "script-message", "tvh-recording", url, e.title or "", e.channel or "" }) end)
     say("PLAYING  " .. e.title, 3)
 end
 
@@ -685,6 +694,22 @@ fetch_lineup = function()
         for _, n in ipairs(extra) do filters[#filters + 1] = n end
         tvh_lineup = tl
         merge_lineup()
+        if autofill then
+            autofill = false
+            -- The first eight of each, in Tvheadend's channel order
+            presets = read_presets()
+            local tv, radio = {}, {}
+            for _, c in ipairs(tl) do
+                local list = c.radio and radio or tv
+                if #list < 8 then list[#list + 1] = { uuid = c.uuid, title = c.title } end
+            end
+            if #presets.tv == 0 then presets.tv = tv end
+            if #presets.radio == 0 then presets.radio = radio end
+            write_presets(presets)
+            presets_dirty = true
+            say(string.format("%d TV CHANNELS AND %d RADIO STATIONS ON THE KEYS  ·  CHANGE ANY HERE",
+                #presets.tv, #presets.radio), 6)
+        end
         render()
     end
     api("channel/grid?limit=5000", nil, function(j) chans = j and j.entries; finish() end)
@@ -791,6 +816,8 @@ local function sconnect()
         if changed then presets_dirty = true end
         lineup = nil
         if #presets.tv == 0 and #presets.radio == 0 then
+            autofill, wizard = true, "tv"
+            filter, psel, ptop = "ALL", 1, 0
             view = "presets"; fetch_lineup()
         else
             apply_presets()
@@ -828,7 +855,7 @@ rm -f /tmp/mpv-tvh-find.txt]=]
 end
 
 local function scancel()
-    if TVH_HOST == "" then say("TVHEADEND'S ADDRESS IS NEEDED FOR THE GUIDE", 3); return end
+    if TVH_HOST == "" then mp.command("quit"); return end   -- DEMO, or CLOSE: carry on without
     view = "guide"
     render()
 end
@@ -881,7 +908,7 @@ local function sadd()
         end
         if url:match("youtube%.com/") or url:match("youtu%.be/") then
             adding = false
-            say("YOUTUBE LINKS GO ON THE YOUTUBE FACEPLATE", 4)
+            say("THAT'S A YOUTUBE LINK, NOT A STREAM", 4)
             return
         end
         for i, st in ipairs(presets.streams) do
@@ -951,7 +978,19 @@ end
 
 local STACTIONS = { watch = sadd, rec = skind, series = sremove }
 
-local PACTIONS = { watch = ptoggle, rec = pclear, series = function() view = "setup"; setup.addr = TVH_HOST; render() end }
+local function pnext()                     -- the third button: NEXT: RADIO, DONE, or SETUP
+    if wizard == "tv" then
+        wizard, filter, psel, ptop = "radio", "RADIO", 1, 0
+        render()
+    elseif wizard == "radio" then
+        wizard = nil
+        say("ALL SET  ·  KEY 3 CHANGES THE PRESETS ANY TIME", 4)
+        show("guide")                      -- (which applies the presets)
+    else
+        view = "setup"; setup.addr = TVH_HOST; render()
+    end
+end
+local PACTIONS = { watch = ptoggle, rec = pclear, series = pnext }
 local SACTIONS = { watch = sconnect, rec = sfind, series = scancel }
 
 ---------------------------------------------------------------------------
@@ -1186,7 +1225,8 @@ local function draw_presets(ev, FL, now)
     heading(ev, FL, now, "PRESETS")
     local list, keys = filtered(), slots()
     local status = lineup_error or (lineup_loading and "ASKING TVHEADEND" or
-        ((#list == 1 and "1 CHANNEL" or (#list .. " CHANNELS")) .. "  ·  " .. #keys .. " OF 8 KEYS"))
+        ((wizard == "tv" and "STEP 1 OF 2: TV  ·  ") or (wizard == "radio" and "STEP 2 OF 2: RADIO  ·  ") or
+         ((#list == 1 and "1 CHANNEL" or (#list .. " CHANNELS")) .. "  ·  ")) .. #keys .. " OF 8 KEYS")
     ev[#ev + 1] = text(D.x + D.w - 78, D.y + 23, 6, 10.5, lineup_error and C.rec or FL[2], status, { spacing = 2 })
     -- Filters (knob 1)
     local fx = D.x + 170
@@ -1260,12 +1300,18 @@ local function draw_presets(ev, FL, now)
     details_text(ev, FL, c and c.title or "PRESETS",
         c and table.concat({ c.number > 0 and ("CHANNEL " .. c.number) or "NO NUMBER", c.kind,
             k and ("ON KEY " .. k) or "NOT ON A KEY" }, "  ·  ") or nil,
-        { "Press a knob to put this one on the next free key, or take it off.",
-          "Knob 1 changes the filter; RADIO's are the radio's keys, the rest the TV's." })
+        wizard == "tv" and { "These are the TV's keys. Press a knob to put a channel on the next free",
+                             "key, or take it off. Then NEXT: RADIO for the radio's." }
+        or wizard == "radio" and { "These are the radio's keys. Press a knob to put a station on the next",
+                                   "free key, or take it off. Then DONE." }
+        or { "Press a knob to put this one on the next free key, or take it off.",
+             "Knob 1 changes the filter; RADIO's are the radio's keys, the rest the TV's." })
     button(ev, FL, BUTTONS[1], k and "TAKE OFF" or "ADD", "ENTER", c ~= nil, false)
     local asking = mp.get_time() < clear_confirm
     button(ev, FL, BUTTONS[2], asking and "CLEAR: SURE?" or "CLEAR KEYS", "PRESS TWICE", #keys > 0, asking)
-    button(ev, FL, BUTTONS[3], "SETUP", "TVHEADEND'S ADDRESS", true, false)
+    if wizard == "tv" then button(ev, FL, BUTTONS[3], "NEXT: RADIO", "ALT + ENTER", true, false)
+    elseif wizard == "radio" then button(ev, FL, BUTTONS[3], "DONE", "ALT + ENTER", true, false)
+    else button(ev, FL, BUTTONS[3], "SETUP", "TVHEADEND'S ADDRESS", true, false) end
 end
 
 -- Streams: the links kept, their names and kinds
@@ -1329,7 +1375,8 @@ local function draw_setup(ev, FL, now)
     ev[#ev + 1] = text(D.x + 30, y0, 4, 16.5, FL[1], "Where's your Tvheadend server?")
     ev[#ev + 1] = text(D.x + 30, y0 + 30, 4, 14, FL[2],
         "Type its address (a name or IP address, and :9981 if it isn't the usual port),")
-    ev[#ev + 1] = text(D.x + 30, y0 + 52, 4, 14, FL[2], "or FIND to look for it on your network. Then CONNECT.")
+    ev[#ev + 1] = text(D.x + 30, y0 + 52, 4, 14, FL[2], "or FIND to look for it on your network. Then CONNECT."
+        .. (DEMO and TVH_HOST == "" and "  Or DEMO to try it first." or ""))
     local bx, by, bw, bh = D.x + 30, y0 + 84, D.w - 60, 44
     ev[#ev + 1] = shape(rrect_path(bx, by, bw, bh, 6), FL[1])
     ev[#ev + 1] = shape(rrect_path(bx + 2, by + 2, bw - 4, bh - 4, 5), C.window)
@@ -1348,7 +1395,9 @@ local function draw_setup(ev, FL, now)
           "for the pad's keys, from everything on the server (key 3: presets)." })
     button(ev, FL, BUTTONS[1], "CONNECT", "ENTER", setup.addr ~= "" and not setup.checking, false)
     button(ev, FL, BUTTONS[2], "FIND", "ON THE NETWORK", not setup.finding, false)
-    button(ev, FL, BUTTONS[3], "CANCEL", "ESC", TVH_HOST ~= "", false)
+    if TVH_HOST ~= "" then button(ev, FL, BUTTONS[3], "CANCEL", "ESC", true, false)
+    elseif DEMO then button(ev, FL, BUTTONS[3], "DEMO", "TEST CARDS · NET RADIO", true, false)
+    else button(ev, FL, BUTTONS[3], "CLOSE", "ESC", true, false) end
 end
 
 -- The guide itself: channels against time, and the selected programme
@@ -1641,7 +1690,8 @@ key("Alt+DOWN", down)
 local enter_all = per({ guide = enter, recs = renter, presets = ptoggle, streams = sadd, setup = sconnect })
 key("ENTER", enter_all)
 key("KP_ENTER", enter_all)
-key("Alt+ENTER", per({ guide = series_toggle, recs = rseries }))
+key("Alt+ENTER", per({ guide = series_toggle, recs = rseries,
+                       presets = function() if wizard then pnext() end end }))   -- NEXT: RADIO, DONE
 key("PGUP", per({ guide = function() to_time(sel.t - 86400) end, recs = function() rmove(-ROWS) end,
                  presets = function() pmove(-ROWS) end }))
 key("PGDWN", per({ guide = function() to_time(sel.t + 86400) end, recs = function() rmove(ROWS) end,
@@ -1673,9 +1723,7 @@ for ch in ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.:-_'&
 end
 typing("SPACE", " ")
 mp.register_script_message("guide-show", function(v) show(v or "guide") end)
-key("Alt+F16", function() send(SOCK, { "cycle", "mute" }) end)
-key("Alt+F19", function() mp.command("quit") end)
-mp.add_forced_key_binding("Alt+F17", "guide-close", function() mp.command("quit") end)   -- Alt + 5: GUIDE
+
 
 ---------------------------------------------------------------------------
 -- Follow the TV: what's on, and close when it quits
@@ -1727,10 +1775,16 @@ fetch_channels(function()
     sel.ch = math.max(1, playing)
     keep_visible()
     fetch_events()
+    -- Nothing on the keys yet (the radio, say, after only the TV's were
+    -- picked): straight to the presets, on this player's kind
+    if #channels == 0 and TVH_HOST ~= "" and view == "guide" then
+        filter, psel, ptop = RADIO and "RADIO" or "ALL", 1, 0
+        show("presets")
+    end
 end)
 
--- Closing (CLOSE, Alt + 5, the player gone): tell the faceplate at once, so
--- its LIBRARY / GUIDE light goes out and the next press opens it again
+-- Closing (CLOSE, the GUIDE key, the player gone): tell the faceplate at once, so
+-- its GUIDE light goes out and the next press opens it again
 mp.register_event("shutdown", function()
     os.remove(ALIVE)
     if presets_dirty then                                -- closed on the presets: still apply them

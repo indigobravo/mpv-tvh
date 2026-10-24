@@ -1,37 +1,30 @@
 -- preamp.lua
 -- The PR-252 control amplifier: a media-less mpv window (control socket
--- /tmp/mpv-preamp, started by `preamp`) drawn like the other faceplates,
--- that chooses which source you hear.
+-- /tmp/mpv-preamp, started by `preamp`) drawn like the faceplates, that
+-- chooses which source you hear.
 --
 --   Switching it on starts the TV and the tuner, with TV chosen (or the
---   source whose pad key started it); the others start when chosen.
---   INPUT keys TV, TUNER, NETWORK, CD and VIDEO choose the source. The sources keep
---   running: the one chosen plays at full volume and the others at none, so
---   switching back finds live TV and radio where they are now, and the CD and
---   YouTube where they've got to. A source that isn't running is started;
---   a source started any other way becomes the one chosen.
+--   source whose pad key started it). INPUT keys TV and TUNER choose the
+--   source. Both keep running: the one chosen plays at full volume and the
+--   other at none, so switching back finds live TV and radio where they are
+--   now. A source that isn't running is started; a source started any
+--   other way becomes the one chosen.
 --
 --   The display shows the sources running and the one chosen, the source's
---   name, the Mac's volume, what the source is playing, level bars and the
---   sound device (OUT). The VOLUME knob (scroll over it) and MUTE set the
---   Mac's volume; Hammerspoon writes the volume and device to
---   /tmp/mpv-tvh.audio and tells the preamp (script-message preamp-audio).
---   DIM darkens the display and stops the level bars. SCROLL sets when
---   long text scrolls: AUTO (only while the preamp is active), OFF, ON. COLOUR follows the source's display colour (AUTO) or picks one. MONITOR
---   opens and closes the chosen source's windows: PICTURE (TV, YouTube, video: the
---   picture, or just the sound), VU METER, the CD's PLAYLIST, the CD's and
---   video's LIBRARY, and the TV's GUIDE (in LIBRARY's place). Windows in the secondary picture slot (under the TV window)
---   stay open, stacked; choosing a source brings its ones to the front.
---   STACK (on when the preamp's switched on) moves the faceplates up under the preamp in two rows: the TV
---   (the primary) always first, then the others on top of each other, the
---   chosen one in front; press
---   it again to put them back. Hammerspoon moves the windows (the
---   hammerspoon://tvh-view URL). REC OUT (off, TV, TUNER, NET) picks what
---   the RC-252 recorder records (recorder.lua), whatever you're listening
---   to; it's written to /tmp/mpv-preamp.rec. POWER turns everything off.
+--   name, the Mac's volume, what the source is playing, level bars, the
+--   sound device (OUT), and the signal and SNR of the Tvheadend tuner the
+--   chosen source is using (from Tvheadend's /api/status/inputs). The
+--   VOLUME knob (scroll over it) and MUTE set the Mac's volume; Hammerspoon
+--   writes the volume and device to /tmp/mpv-tvh.audio and tells the preamp
+--   (script-message preamp-audio). DIM darkens the display and stops the
+--   level bars. SCROLL sets when long text scrolls: AUTO (only while the
+--   preamp is active), OFF, ON. COLOUR follows the source's display colour
+--   (AUTO) or picks one. GUIDE opens and closes the chosen source's guide.
+--   SETUP connects Tvheadend and picks presets, in the guide. POWER turns
+--   everything off.
 --
--- script-message preamp-select <tv|tuner|net|cd|vid> chooses a source (the pad's
--- keys, via Hammerspoon). The choice is written to /tmp/mpv-preamp.input and
+-- script-message preamp-select <tv|tuner> chooses a source (the pad's keys,
+-- via Hammerspoon). The choice is written to /tmp/mpv-preamp.input and
 -- saved, with the display settings, in mpv's state folder.
 
 local mp = require 'mp'
@@ -40,28 +33,16 @@ local utils = require 'mp.utils'
 if not (mp.get_property("input-ipc-server") or ""):match("/mpv%-preamp$") then return end
 
 local SOURCES = {
-    { id = "tv",    kind = "tv",      label = "TV",    caption = "TV",      name = "TELEVISION",
-      start = "tv --default", cmd = "tv",      face = "panel-tv",
-      windows = { video = true, vu = true, library = true } },          -- library: the guide
-    { id = "tuner", kind = "radio",   label = "TUNER", caption = "TUNER",   name = "TUNER",
-      start = "radio --default", cmd = "radio",   face = "radio",
-      windows = { vu = true, library = true } },                        -- library: the guide
-    { id = "net",   kind = "youtube", label = "NET",   caption = "NETWORK", name = "NETWORK",
-      start = "youtube --default", cmd = "youtube", face = "panel-youtube",
-      windows = { video = true, vu = true, list = true } },
-    { id = "cd",    kind = "music",   label = "CD",    caption = "CD",      name = "COMPACT DISC",
-      start = "music", cmd = "music",             face = "panel-music",
-      windows = { vu = true, list = true, library = true } },
-    { id = "vid",   kind = "video",   label = "VIDEO", caption = "VIDEO",   name = "VIDEO",
-      start = "video", cmd = "video",             face = "panel-video",
-      windows = { video = true, vu = true, library = true } },
+    { id = "tv",    kind = "tv",    label = "TV",    caption = "TV",    name = "TELEVISION",
+      start = "tv --default", cmd = "tv",       face = "panel-tv",
+      windows = { library = true } },                                    -- library: the guide
+    { id = "tuner", kind = "radio", label = "TUNER", caption = "TUNER", name = "TUNER",
+      start = "radio --default", cmd = "radio", face = "radio",
+      windows = { library = true } },
 }
--- MONITOR buttons: the chosen source's windows, opened by its faceplate
+-- The GUIDE key: the chosen source's guide, opened by its faceplate
 local MONITOR = {
-    { id = "video",   caption = "PICTURE",  icon = "video" },
-    { id = "vu",      caption = "VU METER", icon = "vu" },
-    { id = "list",    caption = "PLAYLIST", icon = "list" },
-    { id = "library", caption = "LIBRARY",  icon = "library" },
+    { id = "library", caption = "GUIDE", icon = "guide" },
 }
 local BY_ID = {}
 for _, s in ipairs(SOURCES) do BY_ID[s.id] = s end
@@ -109,23 +90,16 @@ local colour     = prefs.colour or "auto"
 local show_clock = prefs.clock ~= "off"
 local dim_manual = prefs.dim == "on"
 local scroll_mode = ({ auto = 1, off = 1, on = 1 })[prefs.scroll or ""] and prefs.scroll or "auto"
-local stacked    = true                           -- STACK: the compact view (on at switch-on)
-local REC_CYCLE  = { "off", "tv", "tuner", "net" }  -- REC OUT: what the recorder records
-local rec_out    = (prefs.rec == "tv" or prefs.rec == "tuner" or prefs.rec == "net") and prefs.rec or "off"
-local STACK_AT   = mp.get_opt("preamp-stack") or ""  -- where: the TV window's --geometry
 
 local function save_prefs()
     local f = io.open(PREFS_FILE, "w")
     if not f then return end
     f:write("input=", input, "\n", "colour=", colour, "\n", "clock=", show_clock and "on" or "off", "\n",
-            "dim=", dim_manual and "on" or "off", "\n", "view=", stacked and "stack" or "full", "\n",
-            "scroll=", scroll_mode, "\n",
-            "rec=", rec_out, "\n")
+            "dim=", dim_manual and "on" or "off", "\n",
+            "scroll=", scroll_mode, "\n")
     f:close()
     f = io.open(INPUT_FILE, "w")
     if f then f:write(input, "\n"); f:close() end
-    f = io.open("/tmp/mpv-preamp.rec", "w")
-    if f then f:write(rec_out, "\n"); f:close() end
 end
 
 ---------------------------------------------------------------------------
@@ -182,70 +156,17 @@ end
 -- Engraved symbols for the transport keys, centred on (cx, cy), size s
 local function icon_path(kind, cx, cy, s)
     local h = s / 2
-    if kind == "prev" then
-        return poly_path({ cx, cy - h, cx, cy + h, cx - 0.8 * s, cy })
-            .. poly_path({ cx + 0.8 * s, cy - h, cx + 0.8 * s, cy + h, cx, cy })
-    elseif kind == "next" then
-        return poly_path({ cx, cy - h, cx + 0.8 * s, cy, cx, cy + h })
-            .. poly_path({ cx - 0.8 * s, cy - h, cx, cy, cx - 0.8 * s, cy + h })
-    elseif kind == "playpause" then
-        return poly_path({ cx - 0.95 * s, cy - h, cx - 0.15 * s, cy, cx - 0.95 * s, cy + h })
-            .. rect_path(cx + 0.12 * s, cy - h, 0.26 * s, s)
-            .. rect_path(cx + 0.58 * s, cy - h, 0.26 * s, s)
-    elseif kind == "mute" then
+    if kind == "mute" then
         return rect_path(cx - 0.95 * s, cy - 0.2 * s, 0.3 * s, 0.4 * s)
             .. poly_path({ cx - 0.65 * s, cy - 0.2 * s, cx - 0.2 * s, cy - h, cx - 0.2 * s, cy + h, cx - 0.65 * s, cy + 0.2 * s })
             .. line_path(cx + 0.12 * s, cy - 0.28 * s, cx + 0.68 * s, cy + 0.28 * s, 0.13 * s)
             .. line_path(cx + 0.12 * s, cy + 0.28 * s, cx + 0.68 * s, cy - 0.28 * s, 0.13 * s)
-    elseif kind == "vu" then                             -- meter scale and needle
-        local p, r, t = {}, 0.95 * s, 0.13 * s
-        local oy = cy + 0.5 * s
-        for k = 0, 5 do
-            local a1, a2 = math.rad(-60 + k * 24), math.rad(-60 + (k + 1) * 24)
-            if k < 5 then
-                p[#p + 1] = line_path(cx + r * math.sin(a1), oy - r * math.cos(a1),
-                                      cx + r * math.sin(a2), oy - r * math.cos(a2), t)
-            end
-        end
-        local a = math.rad(25)
-        p[#p + 1] = line_path(cx, oy, cx + 1.05 * r * math.sin(a), oy - 1.05 * r * math.cos(a), t)
-        return table.concat(p)
-    elseif kind == "stop" then                           -- square
-        return rect_path(cx - 0.55 * s, cy - 0.55 * s, 1.1 * s, 1.1 * s)
-    elseif kind == "list" then                           -- lines of a list
-        local t = 0.14 * s
-        return rect_path(cx - 0.9 * s, cy - 0.55 * s, 1.8 * s, t) .. rect_path(cx - 0.9 * s, cy - t / 2, 1.8 * s, t)
-            .. rect_path(cx - 0.9 * s, cy + 0.55 * s - t, 1.2 * s, t)
     elseif kind == "guide" then                          -- a programme grid
         local t, g = 0.22 * s, 0.1 * s
         local x0, x1 = cx - 0.95 * s, cx + 0.95 * s
         return rect_path(x0, cy - 0.62 * s, 0.7 * s, t) .. rect_path(x0 + 0.7 * s + g, cy - 0.62 * s, x1 - x0 - 0.7 * s - g, t)
             .. rect_path(x0, cy - t / 2, 1.15 * s, t) .. rect_path(x0 + 1.15 * s + g, cy - t / 2, x1 - x0 - 1.15 * s - g, t)
             .. rect_path(x0, cy + 0.62 * s - t, 0.45 * s, t) .. rect_path(x0 + 0.45 * s + g, cy + 0.62 * s - t, x1 - x0 - 0.45 * s - g, t)
-    elseif kind == "library" then                        -- records on a shelf
-        local t = 0.16 * s
-        return rect_path(cx - 0.85 * s, cy - h, t, s) .. rect_path(cx - 0.5 * s, cy - h, t, s)
-            .. rect_path(cx - 0.15 * s, cy - h, t, s)
-            .. poly_path({ cx + 0.25 * s, cy - 0.42 * s, cx + 0.4 * s, cy - 0.48 * s,
-                           cx + 0.85 * s, cy + 0.44 * s, cx + 0.7 * s, cy + 0.5 * s })
-            .. rect_path(cx - 0.95 * s, cy + h + 0.08 * s, 1.9 * s, 0.1 * s)
-    elseif kind == "video" then                          -- screen with a play triangle
-        local w, hh, t = 1.0 * s, 0.68 * s, 0.12 * s
-        return rect_path(cx - w, cy - hh, 2 * w, t) .. rect_path(cx - w, cy + hh - t, 2 * w, t)
-            .. rect_path(cx - w, cy - hh, t, 2 * hh) .. rect_path(cx + w - t, cy - hh, t, 2 * hh)
-            .. poly_path({ cx - 0.25 * s, cy - 0.32 * s, cx + 0.35 * s, cy, cx - 0.25 * s, cy + 0.32 * s })
-    elseif kind == "full" then                           -- four corner brackets
-        local a, t, l = 0.75 * s, 0.13 * s, 0.4 * s
-        local p = {}
-        local function box(x1, y1, x2, y2)
-            p[#p + 1] = rect_path(math.min(x1, x2), math.min(y1, y2), math.abs(x2 - x1), math.abs(y2 - y1))
-        end
-        for _, c in ipairs({ { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } }) do
-            local x, y = cx + c[1] * a, cy + c[2] * a
-            box(x, y, x - c[1] * l, y - c[2] * t)
-            box(x, y, x - c[1] * t, y - c[2] * l)
-        end
-        return table.concat(p)
     end
     return ""
 end
@@ -364,11 +285,21 @@ local states = {}                      -- latest published state, by source id
 local running = {}                     -- source id -> true
 local starting = {}                    -- source id -> time we started it
 local levels = { l = -90, r = -90 }
+local signal = {}                      -- the chosen source's tuner: { pct =, snr =, input = }
 local audio = { volume = nil, muted = false, device = nil }
 local started = os.time()
 local hits = {}
 local pressed = { id = nil, until_t = 0 }
 local notice = { text = nil, until_t = 0 }
+local PAD_LAYERS = { "CH", "TRANS", "DISP" }         -- the pad's layers (preamp-layer)
+local PAD_NAMES = { "CHANNELS", "TRANSPORT", "DISPLAY" }
+local pad_layer = 1
+do                                                   -- Hammerspoon's, if it's said
+    local f = io.open("/tmp/mpv-tvh.layer", "r")
+    local n = f and tonumber(f:read("*l") or "")
+    if f then f:close() end
+    if n and n >= 1 and n <= 3 then pad_layer = n end
+end
 local scroll = { text = nil, cells = {}, pos = 0, next_t = 0 }
 
 local function sock(src) return "/tmp/mpv-" .. src.kind end
@@ -395,7 +326,7 @@ local function source_theme(src)
         for line in f:lines() do c = line:match("^colour=(%a+)$") or c end
         f:close()
     end
-    return DISPLAYS[c or ""] and c or (mode == "music" and "amber" or "blue")
+    return DISPLAYS[c or ""] and c or "blue"
 end
 
 local function update_theme()
@@ -407,7 +338,6 @@ end
 ---------------------------------------------------------------------------
 
 local render
-local arrange                          -- STACK (defined with the buttons)
 
 -- Full volume to the chosen source, none to the rest; level bars from it
 local function apply()
@@ -420,47 +350,46 @@ local function apply()
     end
 end
 
--- A fish command (tv, radio, youtube, music), in the background; what it
+-- A fish command (tv, radio), in the background; what it
 -- prints goes to /tmp/mpv-tvh-<source>.log
 local launched = {}                    -- source id -> when the preamp started it
-local ROW2 = (mp.get_opt("preamp-row2") or ""):match("^%+%d+%+%d+$")   -- STACK's second row
 local function run(src, command)
     if command == src.start then launched[src.id] = os.time() end
-    -- Stacked: the faceplate opens straight into the second row (__tvh reads
-    -- MPV_TVH_AT), rather than where it lives and then moving
-    if stacked and ROW2 and src.id ~= "tv" then command = "set -x MPV_TVH_AT " .. ROW2 .. "; " .. command end
     mp.command_native_async({ name = "subprocess", playback_only = false, detach = true,
         args = { "/bin/sh", "-c", 'exec fish -c "$1" >"$2" 2>&1', "sh", command,
                  "/tmp/mpv-tvh-" .. src.id .. ".log" } }, function() end)
 end
 
-local secondary_switch                 -- the secondary picture slot (defined with MONITOR)
 
 local static = { w = 0, h = 0 }       -- the drawn front panel (rebuilt when it changes)
+
+local window_on, toggle_window          -- MONITOR (defined with the buttons)
 
 local function choose(id, quiet)
     local src = BY_ID[id]
     if not src then return end
     if input ~= id then
         if running[input] then send(sock(BY_ID[input]), "script-message", "vu-preamp", "no") end
-        if secondary_switch then secondary_switch(input, id) end
-        if input == "tv" or id == "tv" or input == "tuner" or id == "tuner" then static.w = 0 end   -- LIBRARY <-> GUIDE
         input = id
+        signal = {}
         save_prefs()
         update_theme()
         scroll.text = nil
     end
     if running[id] then
+        local st = states[id] or {}
+        if not quiet and (st["playlist-count"] or 0) == 0 and not window_on("library", id) then
+            toggle_window("library", id)            -- nothing on its keys: its guide, on the presets
+        end
         send(sock(src), "set", "mute", "no")       -- the preamp's MUTE is the one that counts
         send(sock(src), "script-message", "vu-preamp", dim_manual and "no" or "yes")
-        if src.cmd ~= "radio" then run(src, src.cmd .. " --panel") end   -- its faceplate, if it's gone
+        if src.id == "tv" then run(src, "tv --panel") end   -- its faceplate, if it's gone
     elseif not starting[id] or os.time() - starting[id] > 15 then
         starting[id] = os.time()                 -- not running: start it
         run(src, src.start)
         if not quiet then notice.text, notice.until_t = "STARTING", mp.get_time() + 6 end
     end
     apply()
-    if stacked then arrange(not running[id]) end   -- again once a new one's windows are up
     render()
 end
 
@@ -513,32 +442,38 @@ end
 ---------------------------------------------------------------------------
 
 local L = {}
--- Left: badge, DISPLAY buttons, POWER. Top: the display. Bottom: INPUT,
--- MONITOR and MUTE keys. Right: the VOLUME knob.
+-- Columns shared with the faceplates (the same units across): the badge
+-- and POWER at 34, the small buttons in a column at 196-300 (over the
+-- faceplates' ones), the display from 330 to GW - 758, and the VOLUME knob
+-- filling the right-hand side, over the faceplates' transport keys (GW - 712
+-- to GW - 34). Under the display: TV, TUNER, GUIDE and MUTE, across its width.
 local function layout()
     local P = { x = 10, y = 8, w = GW - 20, h = GH - 16 }
-    local knob = { x = GW - 40 - 165, y = GH / 2 - 14, r = 140 }
     local D = { x = 330, y = 34, h = 232 }
-    D.w = knob.x - knob.r - 56 - D.x
+    D.w = GW - 758 - D.x
+    local knob = { x = GW - 373, y = 222, r = 180 }            -- the whole right-hand side
     local pad = 24
     local pn = math.min(15, (D.w - 2 * pad) / (16 * 6 - 1))     -- 12 name cells, gap, 3 volume cells
     local prt = 7
     local buttons = {}
-    for k, l in ipairs({ "CLOCK", "DIM", "COLOUR", "SCROLL", "STACK", "REC OUT", "SETUP" }) do
-        local r, c = math.floor((k - 1) / 3), (k - 1) % 3
-        buttons[#buttons + 1] = { x = 34 + c * 88, y = 180 + r * 80, w = 76, h = 30, r = 15, label = l }
+    for k, l in ipairs({ "CLOCK", "DIM", "COLOUR", "SCROLL" }) do   -- DISPLAY: a column, as on the faceplates
+        buttons[#buttons + 1] = { x = 196, y = 53 + (k - 1) * 52, w = 104, h = 30, r = 15, label = l }
     end
-    local KY, KH, KW, KG = 300, 116, 132, 14                    -- the bottom row of keys
+    buttons[#buttons + 1] = { x = 196, y = GH - 56 - 15, w = 104, h = 30, r = 15, label = "SETUP" }   -- level with POWER
+    local KY, KH, KG = 300, 116, 14                             -- the bottom row of keys,
+    -- across the display's width: TV, TUNER, then GUIDE and MUTE
     local inputs, monitor = {}, {}
+    local n = #SOURCES + #MONITOR + 1
+    local KW = (D.w - (n - 1) * KG) / n
+    local function at(i) return D.x + (i - 1) * (KW + KG) end
     for k, src in ipairs(SOURCES) do
-        inputs[#inputs + 1] = { x = D.x + (k - 1) * (KW + KG), y = KY, w = KW, h = KH, r = 10, src = src }
+        inputs[#inputs + 1] = { x = at(k), y = KY, w = KW, h = KH, r = 10, src = src }
     end
-    local mx0 = D.x + #SOURCES * (KW + KG) + 40
     for k, m in ipairs(MONITOR) do
-        monitor[#monitor + 1] = { x = mx0 + (k - 1) * (KW + KG), y = KY, w = KW, h = KH, r = 10,
+        monitor[#monitor + 1] = { x = at(#SOURCES + k), y = KY, w = KW, h = KH, r = 10,
                                   id = m.id, caption = m.caption, icon = m.icon }
     end
-    local mute = { x = mx0 + #MONITOR * (KW + KG) + 40, y = KY, w = KW, h = KH, r = 10 }
+    local mute = { x = at(n), y = KY, w = KW, h = KH, r = 10 }
     L = { P = P, D = D, pad = pad, pn = pn, prt = prt, name_y = D.y + 46,
           rt_y = D.y + D.h - 7 * prt - 18, buttons = buttons, inputs = inputs, knob = knob,
           monitor = monitor, mute = mute, power = { x = 52, y = GH - 56, r = 20 } }
@@ -558,44 +493,6 @@ local function cycle_colour()
     render()
 end
 
--- Ask Hammerspoon to stack the windows (or put them back), the chosen
--- source's faceplate in front
-arrange = function(again)
-    local url = string.format("hammerspoon://tvh-view?mode=%s&input=%s&at=%s",
-        stacked and "stack" or "full", input, (STACK_AT:gsub("%+", "_")))
-    mp.command_native_async({ name = "subprocess", playback_only = false,
-        args = { "open", "-g", url } }, function() end)
-    if again then mp.add_timeout(2, function() arrange(false) end) end   -- windows still opening
-end
-
-local function toggle_stack()
-    stacked = not stacked
-    save_prefs()
-    arrange(false)
-    notice.text, notice.until_t = stacked and "STACKED" or "SPREAD OUT", mp.get_time() + 1.6
-    render()
-end
-
--- REC OUT: off -> TV -> TUNER -> NET; the recorder records that source,
--- whatever you're listening to
-local function cycle_rec_out()
-    local i = 1
-    for k, r in ipairs(REC_CYCLE) do if r == rec_out then i = k end end
-    rec_out = REC_CYCLE[i % #REC_CYCLE + 1]
-    save_prefs()
-    notice.text, notice.until_t = "REC OUT  " .. (rec_out == "off" and "OFF" or BY_ID[rec_out].label),
-        mp.get_time() + 1.6
-    render()
-end
-
-local function recording()
-    local f = io.open("/tmp/mpv-recorder.state", "r")
-    local line = f and f:read("*l")
-    local t = f and tonumber(f:read("*l") or "")
-    if f then f:close() end
-    return line and line:match("^rec (%a+)")
-end
-
 -- SETUP: Tvheadend's address and the presets, in the TV's guide (the TV
 -- starts if it isn't on)
 local function setup()
@@ -612,8 +509,6 @@ end
 
 local ACTIONS = {
     SETUP = setup,
-    ["REC OUT"] = cycle_rec_out,
-    STACK  = toggle_stack,
     CLOCK  = function() show_clock = not show_clock; save_prefs(); render() end,
     DIM    = function()                    -- also stops the level bars (and the player measuring)
         dim_manual = not dim_manual
@@ -640,38 +535,24 @@ local function alive(file)
     return t ~= nil and os.time() - t <= 3
 end
 
-local function window_on(id, sid)
+window_on = function(id, sid)
     sid = sid or input
-    local src, st = BY_ID[sid], states[sid] or {}
+    local src = BY_ID[sid]
     if not running[sid] or not src.windows[id] then return false end
-    if id == "video" then
-        return st.vid ~= nil and st.vid ~= false and st.vid ~= "no" and (st["playlist-pos"] or -1) >= 0
-    end
-    if id == "vu" then return alive("/tmp/mpv-" .. src.kind .. ".vu.alive") end
-    if id == "list" then return alive("/tmp/mpv-" .. src.kind .. ".list.alive") end
     return alive("/tmp/mpv-" .. src.kind .. ".lib.alive")
 end
 
-local function toggle_window(id, sid)
+toggle_window = function(id, sid)
     sid = sid or input
     local src = BY_ID[sid]
     if not running[sid] or not src.windows[id] then return end
     send("/tmp/mpv-" .. src.face, "script-message", "window-toggle", id)
 end
 
--- The secondary picture slot (under the TV window): every source's windows
--- stay open there, stacked; choosing a source brings its picture, VU meter
--- and playlist to the front (Hammerspoon raises them, hammerspoon://tvh-raise)
-secondary_switch = function(_, new)
-    mp.command_native_async({ name = "subprocess", playback_only = false,
-        args = { "open", "-g", "hammerspoon://tvh-raise?input=" .. new } }, function() end)
-end
-
 local function power()                          -- everything off
     for _, src in ipairs(SOURCES) do
         if running[src.id] then send(sock(src), "quit") end
     end
-    send("/tmp/mpv-recorder", "quit")
     mp.add_timeout(0.5, function() mp.command("quit") end)
 end
 
@@ -719,23 +600,23 @@ local function build_static()
             ev[#ev + 1] = text(b.x + b.w / 2 + 1, b.y + b.h / 2 + 3.5, 5, size, C.plate_lo, label, true, 2)
             ev[#ev + 1] = text(b.x + b.w / 2, b.y + b.h / 2 + 2, 5, size, C.silk, label, true, 2)
         end
-        ev[#ev + 1] = text(b.x + b.w / 2, b.y + b.h + 6, 8, 13, C.silk, caption, false, 2)
+        if caption then ev[#ev + 1] = text(b.x + b.w / 2, b.y + b.h + 6, 8, 13, C.silk, caption, false, 2) end
     end
-    for i, b in ipairs(L.buttons) do
-        key(b, nil, b.label)
+    for i, b in ipairs(L.buttons) do                -- small buttons: the label on the button
+        key(b, nil, nil)
+        ev[#ev + 1] = text(b.x + b.w / 2, b.y + b.h / 2 + 1, 5, 12, C.silk, b.label, false, 2)
         hit("b" .. i, b.x, b.y, b.w, b.h, ACTIONS[b.label])
     end
     ev[#ev + 1] = text(L.buttons[1].x, L.buttons[1].y - 8, 1, 12, C.silk_dim, "DISPLAY", false, 3)
+    ev[#ev + 1] = text(L.buttons[#L.buttons].x, L.buttons[#L.buttons].y - 8, 1, 12, C.silk_dim, "TVHEADEND", false, 3)
     for i, b in ipairs(L.monitor) do
-        if b.id == "library" and (input == "tv" or input == "tuner") then key(b, nil, "GUIDE", nil, "guide")   -- the TV's, the radio's
-        else key(b, nil, b.caption, nil, b.icon) end
+        key(b, nil, b.caption, nil, b.icon)
         hit("m" .. i, b.x, b.y, b.w, b.h, function() toggle_window(b.id) end)
     end
     key(L.mute, nil, "MUTE", nil, "mute")
     hit("mute", L.mute.x, L.mute.y, L.mute.w, L.mute.h, toggle_mute)
-    ev[#ev + 1] = text(L.monitor[1].x, L.monitor[1].y - 8, 1, 12, C.silk_dim, "MONITOR", false, 3)
     for i, b in ipairs(L.inputs) do
-        key(b, b.src.label, b.src.caption, 20)
+        key(b, b.src.label, nil, 22)        -- the name on the key
         hit("i" .. i, b.x, b.y, b.w, b.h, function() choose(b.src.id) end)
     end
     ev[#ev + 1] = text(L.inputs[1].x, L.inputs[1].y - 8, 1, 12, C.silk_dim, "INPUT", false, 3)
@@ -773,13 +654,6 @@ local function lamp(ev, x, y, label, level)       -- level: 2 lit, 1 dim, 0 off
     return x + (#label * 14 + 30)
 end
 
-local function hi_res(st)
-    if (st["current-tracks/audio/demux-samplerate"] or 0) > 48000 then return true end
-    local codec, fmt = st["audio-codec-name"] or "", st["audio-params/format"] or ""
-    return (codec:match("flac") or codec:match("alac") or codec:match("pcm") or codec:match("wavpack")
-            or codec:match("ape") or codec:match("tta")) ~= nil and (fmt:match("s24") or fmt:match("s32")) ~= nil
-end
-
 -- What the chosen source is playing, for the lower line
 local function playing(src, st)
     if not running[src.id] then
@@ -788,28 +662,20 @@ local function playing(src, st)
         return "DIDN'T START  ·  SEE /TMP/MPV-TVH-" .. src.id:upper() .. ".LOG"
     end
     local pos = (st["playlist-pos"] or -1) + 1
-    if st.stopped and (src.id == "tv" or src.id == "tuner") then
+    if (st["playlist-count"] or 0) == 0 then
+        return src.id == "tv" and "NO CHANNELS  ·  PRESS GUIDE TO PICK SOME" or "NO STATIONS  ·  PRESS GUIDE TO PICK SOME"
+    end
+    if st.stopped then
         local t = (st.titles or {})[st.stopped_index or 0]
         return (t and (t .. "  · ") or "") .. "STOPPED"
     end
+    if st.recording then return "PLAYBACK  · " .. st.recording end   -- a Tvheadend recording
     local title = (st.titles or {})[pos]
     if src.id == "tv" then
         return title or st["media-title"] or "NO CHANNEL"
-    elseif src.id == "tuner" then
-        local icy = st["metadata/by-key/icy-title"]
-        return (icy and icy ~= "") and ((title and (title .. "  · ") or "") .. icy) or title or "NO STATION"
-    elseif src.id == "vid" then
-        if pos < 1 then return "NO VIDEO" end
-        return title or st["media-title"] or ""
-    elseif src.id == "net" then
-        if pos < 1 then return "NOTHING PLAYING" end
-        return st["media-title"] or title or ""
-    else
-        if pos < 1 then return "NO DISC" end
-        local t = st["metadata/by-key/title"] or title or ""
-        local a = st["metadata/by-key/artist"]
-        return a and (t .. "  · " .. a) or t
     end
+    local icy = st["metadata/by-key/icy-title"]
+    return (icy and icy ~= "") and ((title and (title .. "  · ") or "") .. icy) or title or "NO STATION"
 end
 
 local function db_bars(db, n)
@@ -841,12 +707,33 @@ render = function()
     end
     x = x + 16
     x = lamp(ev, x, iy, "STEREO", (on and (st["audio-params/channel-count"] or 0) >= 2) and 2 or 0)
-    x = lamp(ev, x, iy, "HI-RES", (on and hi_res(st)) and 2 or 0)
     x = lamp(ev, x, iy, "MUTE", audio.muted and 2 or 0)
-    if rec_out ~= "off" then
-        x = lamp(ev, x + 16, iy, "REC " .. BY_ID[rec_out].label, recording() and 2 or 1)
+
+    -- Signal: the tuner's strength (5 bars) and SNR, from Tvheadend
+    x = x + 16
+    local sig = signal.pct ~= nil
+    x = lamp(ev, x, iy, "SIG", sig and 2 or 0) - 20
+    local lit, off = {}, {}
+    local nbars = sig and math.max(signal.pct > 0 and 1 or 0, math.min(5, math.floor(signal.pct / 20 + 0.5))) or 0
+    for i = 1, 5 do
+        local path = rect_path(x + (i - 1) * 20, iy + 7 - i * 4, 14, 4 + i * 4)
+        if i <= nbars then lit[#lit + 1] = path else off[#off + 1] = path end
     end
+    if #off > 0 then ev[#ev + 1] = shape(table.concat(off), FL[3]) end
+    if #lit > 0 then
+        ev[#ev + 1] = shape(table.concat(lit), FL[1], 150, 5)
+        ev[#ev + 1] = shape(table.concat(lit), FL[1])
+    end
+    x = x + 5 * 20 + 16
+    local snr = signal.snr and string.format("SNR %.1fDB", signal.snr)
+        or (signal.snr_pct and string.format("SNR %d%%", signal.snr_pct)) or "SNR --"
+    x = lamp(ev, x, iy, snr, (signal.snr or signal.snr_pct) and 2 or 0)
+
+    -- The pad's layer (Hammerspoon): PAD, then CH / TRANS / DISP, the one in use lit
+    x = lamp(ev, x + 16, iy, "PAD", 1)
+    for n, l in ipairs(PAD_LAYERS) do x = lamp(ev, x, iy, l, pad_layer == n and 2 or 0) end
     local out = st.audio_out or audio.device or "MAC OUTPUT"
+    if #out > 18 then out = out:sub(1, 17) .. "…" end           -- room for the PAD lamps
     ev[#ev + 1] = text(D.x + D.w - L.pad, iy, 6, 13, FL[2], "OUT  " .. out:upper(), true, 2)
 
     -- Source name and volume
@@ -917,18 +804,6 @@ render = function()
         end
     end
     led(L.mute, audio.muted)
-    for _, b in ipairs(L.buttons) do
-        if b.label == "REC OUT" then
-            local lx, ly, on = b.x + b.w - 16, b.y + b.h / 2, rec_out ~= "off"
-            if on then ev[#ev + 1] = shape(circle_path(lx, ly, 6), C.led_on, 140, 8) end
-            ev[#ev + 1] = shape(circle_path(lx, ly, 3.5), on and C.led_on or C.led_off)
-        end
-        if b.label == "STACK" then
-            local lx, ly = b.x + b.w - 16, b.y + b.h / 2
-            if stacked then ev[#ev + 1] = shape(circle_path(lx, ly, 6), C.led_on, 140, 8) end
-            ev[#ev + 1] = shape(circle_path(lx, ly, 3.5), stacked and C.led_on or C.led_off)
-        end
-    end
 
     -- Volume knob marker: 7 o'clock (0) to 5 o'clock (100)
     local k = L.knob
@@ -1003,12 +878,130 @@ mp.add_forced_key_binding("WHEEL_UP", "preamp-vol-up", wheel(1))
 mp.add_forced_key_binding("WHEEL_DOWN", "preamp-vol-down", wheel(-1))
 
 mp.register_script_message("preamp-select", function(id) choose(id) end)
-mp.register_script_message("preamp-power", function() power() end)   -- Alt + 1 on the pad: off
+
+-- The pad (Hammerspoon). Its layer, for the PAD lamps: preamp-layer <1-3> [hold]
+pad_layer = 1
+mp.register_script_message("preamp-layer", function(n, how)
+    n = tonumber(n) or 1
+    if n ~= pad_layer then
+        notice.text = "PAD  " .. n .. "  ·  " .. (PAD_NAMES[n] or "") .. (how == "hold" and "  (HELD)" or "")
+        notice.until_t = mp.get_time() + 1.6
+    end
+    pad_layer = n
+    render()
+end)
+mp.register_script_message("preamp-mute", function() toggle_mute() end)
+mp.register_script_message("preamp-setup", function() setup() end)
+
+-- Layer 3's keys: the display settings, on the preamp and both faceplates
+-- at once, so they match. preamp-display DIM|SCROLL|CLOCK, or COLOUR [-1|1]
+local FACE_COLOURS = { "blue", "red", "green", "amber" }
+local function to_faces(...)
+    for _, src in ipairs(SOURCES) do
+        if running[src.id] then send("/tmp/mpv-" .. src.face, "script-message", "display-set", ...) end
+    end
+end
+mp.register_script_message("preamp-display", function(what, dir)
+    if what == "DIM" then
+        ACTIONS.DIM()
+        to_faces("dim", dim_manual and "on" or "off")
+        notice.text, notice.until_t = dim_manual and "DIM  ON" or "DIM  OFF", mp.get_time() + 1.6
+    elseif what == "SCROLL" then
+        ACTIONS.SCROLL()
+        to_faces("scroll", scroll_mode)
+    elseif what == "CLOCK" then
+        ACTIONS.CLOCK()
+        notice.text, notice.until_t = show_clock and "CLOCK  ON" or "CLOCK  OFF", mp.get_time() + 1.6
+    elseif what == "COLOUR" then              -- the faceplates' colour; the preamp follows it
+        local now, i = source_theme(BY_ID[input]), 1
+        for k, c in ipairs(FACE_COLOURS) do if c == now then i = k end end
+        local new = FACE_COLOURS[(i - 1 + (tonumber(dir) or 1)) % #FACE_COLOURS + 1]
+        to_faces("colour", new)
+        colour = "auto"
+        save_prefs()
+        mp.add_timeout(0.3, function() update_theme(); render() end)   -- once they've saved it
+        notice.text, notice.until_t = "COLOUR  " .. new, mp.get_time() + 1.6
+    end
+    render()
+end)
+mp.register_script_message("preamp-power", function() power() end)   -- the pad's POWER key: off
 mp.register_script_message("preamp-audio", function() read_audio(); render() end)
+
+---------------------------------------------------------------------------
+-- Signal: which of Tvheadend's tuners (inputs) the chosen source's channel
+-- is on, from its subscriptions, and that tuner's strength and SNR. Tvheadend
+-- gives each as a relative value (0-65535) or in dB / dBm (thousandths).
+---------------------------------------------------------------------------
+
+local function tvh_host()                -- the address SETUP saved, or the config's
+    local f = io.open((os.getenv("HOME") or "") .. "/.config/mpv-tvh/presets.json", "r")
+    local j = f and utils.parse_json(f:read("*a") or "")
+    if f then f:close() end
+    if type(j) == "table" and j.host and j.host ~= "" then return j.host end
+    local o = mp.get_opt("tvh-host")
+    return (o and o ~= "") and o or nil
+end
+
+local function tvh_get(host, path, cb)
+    mp.command_native_async({ name = "subprocess", capture_stdout = true, playback_only = false,
+        args = { "curl", "-sS", "--netrc-optional", "--max-time", "3", "http://" .. host .. "/api/" .. path } },
+        function(ok, r)
+            cb(ok and r and r.status == 0 and utils.parse_json(r.stdout or "") or nil)
+        end)
+end
+
+local function poll_signal()
+    local st = states[input]
+    local host = tvh_host()
+    local path = st and st.path or ""
+    if not host or not running[input] or st.stopped or not path:find("/stream/channel/", 1, true) then
+        if next(signal) then signal = {}; render() end
+        return
+    end
+    local title = (st.titles or {})[(st["playlist-pos"] or -1) + 1] or st["media-title"] or ""
+    tvh_get(host, "status/subscriptions", function(subs)
+        tvh_get(host, "status/inputs", function(ins)
+            local inputs = ins and ins.entries or {}
+            -- The tuner: the one whose name starts our subscription's service
+            -- (that's how Tvheadend names them), or the only one in use
+            local chosen
+            for _, sub in ipairs(subs and subs.entries or {}) do
+                local svc = (sub.service or ""):lower()
+                if title ~= "" and (((sub.channel or ""):lower() == title:lower())
+                    or svc:sub(-#title - 1) == "/" .. title:lower()) then
+                    for _, i in ipairs(inputs) do
+                        if (i.input or "") ~= "" and (sub.service or ""):sub(1, #i.input) == i.input then chosen = i end
+                    end
+                end
+            end
+            if not chosen then
+                local busy = {}
+                for _, i in ipairs(inputs) do if (i.subs or 0) > 0 then busy[#busy + 1] = i end end
+                if #busy == 1 then chosen = busy[1] end
+            end
+            local new = {}
+            if chosen then
+                new.input = chosen.input
+                if chosen.signal_scale == 1 then new.pct = (chosen.signal or 0) * 100 / 65535
+                elseif chosen.signal_scale == 2 then               -- dBm: -90 (none) to -40 (strong)
+                    new.pct = math.max(0, math.min(100, ((chosen.signal or 0) / 1000 + 90) * 2))
+                end
+                if chosen.snr_scale == 2 then new.snr = (chosen.snr or 0) / 1000
+                elseif chosen.snr_scale == 1 then new.snr_pct = math.floor((chosen.snr or 0) * 100 / 65535 + 0.5) end
+            end
+            signal = new
+            render()
+        end)
+    end)
+end
 
 ---------------------------------------------------------------------------
 -- Follow the sources
 ---------------------------------------------------------------------------
+
+-- Not set up yet (no config, and SETUP never run): at switch-on, once the
+-- TV's up, its guide asks for Tvheadend, or DEMO to carry on with the demo
+local ask_setup = (mp.get_opt("preamp-demo") or "") ~= ""
 
 local first_scan = true
 local function scan()
@@ -1031,10 +1024,16 @@ local function scan()
                 elseif src.id == input then
                     send(sock(src), "script-message", "vu-preamp", dim_manual and "no" or "yes")
                 end
-                if stacked then arrange(true) end      -- its faceplate into the stack
             end
         end
         states[src.id] = up and s or nil
+        if up and ask_setup and src.id == "tv" then
+            ask_setup = false
+            mp.add_timeout(1.5, function()
+                send("/tmp/mpv-" .. src.face, "script-message", "guide-setup")
+                notice.text, notice.until_t = "DEMO  ·  SET UP TVHEADEND IN THE GUIDE", mp.get_time() + 6
+            end)
+        end
     end
     first_scan = false
     apply()
@@ -1076,6 +1075,8 @@ mp.add_periodic_timer(1 / 15, function()
     if moved then render() end
 end)
 
+mp.add_periodic_timer(3, poll_signal)
+
 mp.add_periodic_timer(2, function()
     local f = io.open(AUDIO_FILE, "r")
     if f then f:close(); read_audio() else poll_volume() end
@@ -1104,7 +1105,7 @@ update_theme()
 scan()
 save_prefs()
 choose(input, true)
--- Switching on starts the TV and the tuner (the others start when chosen)
+-- Switching on starts the TV and the tuner
 do
     local delay = 0.5
     for _, id in ipairs({ "tv", "tuner" }) do
@@ -1120,4 +1121,3 @@ do
         end
     end
 end
-if stacked then mp.add_timeout(1, function() arrange(true) end) end

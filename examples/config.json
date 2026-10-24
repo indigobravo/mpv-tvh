@@ -1,0 +1,57 @@
+{
+  "tvheadend": {
+    "host": "192.168.0.10:9981"
+  },
+  "tv": {
+    "label": "TV",
+    "default": "bbc1",
+    "mpv_opts": [
+      "--no-fullscreen",
+      "--geometry=1400x788+1980+33",
+      "--ytdl=no"
+    ],
+    "panel_opts": [
+      "--geometry=1816x182+40+417"
+    ],
+    "channels": [
+      {
+        "name": "bbc1",
+        "title": "BBC ONE HD",
+        "uuid": "0123456789abcdef0123456789abcdef"
+      },
+      {
+        "name": "bbc2",
+        "title": "BBC TWO HD",
+        "uuid": "fedcba9876543210fedcba9876543210"
+      }
+    ]
+  },
+  "radio": {
+    "label": "Radio",
+    "default": "radio4",
+    "mpv_opts": [
+      "--force-window=yes",
+      "--geometry=1816x182+40+619",
+      "--no-border",
+      "--macos-app-activation-policy=accessory",
+      "--ytdl=no"
+    ],
+    "channels": [
+      {
+        "name": "radio4",
+        "title": "BBC Radio 4",
+        "uuid": "00112233445566778899aabbccddeeff"
+      },
+      {
+        "name": "atlantic252",
+        "title": "Atlantic 252",
+        "url": "https://stream4.themediasite.co.uk:8042/"
+      }
+    ]
+  },
+  "preamp": {
+    "panel_opts": [
+      "--geometry=1816x364+40+33"
+    ]
+  }
+}

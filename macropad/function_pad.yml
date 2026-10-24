@@ -1,3 +1,8 @@
+# The mpv-tvh pad: ch57x-keyboard-tool upload macropad/function_pad.yml
+#
+# Keys 1-8 send F13-F20; everything else sends a ctrl-alt-cmd chord that
+# Hammerspoon (hammerspoon/mpv-tvh.lua) turns into what the pad's layer says.
+# The layers are Hammerspoon's, not the pad's: the pad has just this one.
 model: ch57x-1
 orientation: normal
 rows: 3
@@ -7,11 +12,12 @@ layers:
   - buttons:
       - ["f13", "f14", "f15", "f16"]
       - ["f17", "f18", "f19", "f20"]
-      - ["ctrl-alt-cmd-f13", "ctrl-alt-cmd-f16", "ctrl-alt-cmd-f17", "alt"]
+      #  TV                 RADIO               GUIDE               LAYER
+      - ["ctrl-alt-cmd-f13", "ctrl-alt-cmd-f16", "ctrl-alt-cmd-f17", "ctrl-alt-cmd-f12"]
     knobs:
-      - ccw: "ctrl-alt-cmd-f14"         # Hammerspoon: Up, or sideways in a guide/library
-        press: "enter"
-        cw: "ctrl-alt-cmd-f15"          # Down, or sideways
-      - ccw: "ctrl-alt-cmd-f18"
-        press: "ctrl-alt-cmd-f20"       # Hammerspoon: mute, or Enter in a guide/library
+      - ccw: "ctrl-alt-cmd-f14"         # knob 1: channel, seek or colour (by layer)
+        press: "ctrl-alt-cmd-f11"       #   play / pause, or DIM
+        cw: "ctrl-alt-cmd-f15"
+      - ccw: "ctrl-alt-cmd-f18"         # knob 2: volume
+        press: "ctrl-alt-cmd-f20"       #   mute
         cw: "ctrl-alt-cmd-f19"

@@ -1,3 +1,3 @@
-function tv --description 'Play a Tvheadend TV channel via mpv (tv --now for now/next)'
+function tv --description 'Play a Tvheadend TV channel via mpv'
     __tvh tv $argv
 end

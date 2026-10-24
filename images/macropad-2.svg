@@ -10,76 +10,76 @@
 <rect x="60" y="60" width="1380" height="720" rx="34" fill="#2A2A2F"/>
 <rect x="64" y="66" width="1372" height="710" rx="31" fill="url(#body)"/>
 <text x="100" y="106" font-size="22" font-weight="700" fill="#C9C9CE" letter-spacing="1.5">mpv-tvh</text>
-<text x="228" y="106" font-size="13" fill="#707078" letter-spacing="3">CH57x · 12 KEYS · 2 KNOBS</text>
+<text x="228" y="106" font-size="13" fill="#707078" letter-spacing="3">LAYER 2 · TRANSPORT</text>
 <rect x="110" y="156" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="110" y="150" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="112" y="153" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="190.0" y="234.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">1</text>
-<text x="190.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 1</text>
-<text x="190.0" y="288" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: POWER</text>
+
+
+
 <rect x="292" y="156" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="292" y="150" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="294" y="153" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="372.0" y="234.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">2</text>
-<text x="372.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 2</text>
+
+
 <rect x="474" y="156" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="474" y="150" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="476" y="153" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="554.0" y="234.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">3</text>
-<text x="554.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 3</text>
+
+
 <rect x="656" y="156" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="656" y="150" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="658" y="153" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="736.0" y="234.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">4</text>
-<text x="736.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 4</text>
-<text x="736.0" y="288" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: MUTE</text>
+
+
+
 <rect x="110" y="338" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="110" y="332" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="112" y="335" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="190.0" y="416.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">5</text>
-<text x="190.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 5</text>
-<text x="190.0" y="470" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: GUIDE</text>
+
+
+
 <rect x="292" y="338" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="292" y="332" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="294" y="335" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="372.0" y="416.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">6</text>
-<text x="372.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 6</text>
-<text x="372.0" y="470" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: A-B LOOP</text>
+
+
+
 <rect x="474" y="338" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="474" y="332" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="476" y="335" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="554.0" y="416.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">7</text>
-<text x="554.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 7</text>
-<text x="554.0" y="470" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: QUIT</text>
+
+
+
 <rect x="656" y="338" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="656" y="332" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="658" y="335" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="736.0" y="416.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">8</text>
-<text x="736.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">CHANNEL 8</text>
-<text x="736.0" y="470" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: FULL SCREEN</text>
+
+
+
 <rect x="110" y="520" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="110" y="514" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="112" y="517" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="190.0" y="598.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">TV</text>
-<text x="190.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">SOURCE</text>
-<text x="190.0" y="652" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: VIDEO</text>
+
+
+
 <rect x="292" y="520" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="292" y="514" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="294" y="517" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="372.0" y="598.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">RADIO</text>
-<text x="372.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">SOURCE</text>
-<text x="372.0" y="652" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: RECORDER</text>
+
+
+
 <rect x="474" y="520" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="474" y="514" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="476" y="517" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="554.0" y="598.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">YT</text>
-<text x="554.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">SOURCE</text>
-<text x="554.0" y="652" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ALT: CD</text>
+
+
+
 <rect x="656" y="520" width="160" height="160" rx="18" fill="#050506"/>
 <rect x="656" y="514" width="160" height="160" rx="18" fill="#3A3A40"/>
 <rect x="658" y="517" width="156" height="154" rx="16" fill="url(#cap)"/>
-<text x="736.0" y="598.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">ALT</text>
-<text x="736.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">HOLD</text>
+
+
 <circle cx="980" cy="256" r="94" fill="#050506"/>
 <circle cx="980" cy="250" r="94" fill="#34343A"/>
 <circle cx="980" cy="250" r="86" fill="none" stroke="#1E1E22" stroke-width="10" stroke-dasharray="2 3"/>
@@ -87,13 +87,13 @@
 <circle cx="980" cy="190" r="6" fill="#FFB347"/>
 <text x="1100" y="188" font-size="16" font-weight="700" fill="#C9C9CE" letter-spacing="2.5">KNOB 1</text>
 <text x="1100" y="220" font-size="12" fill="#707078" letter-spacing="2">TURN</text>
-<text x="1196" y="220" font-size="13.5" fill="#FFB347" letter-spacing="1">SEEK · CHANNEL</text>
+<text x="1196" y="220" font-size="13.5" fill="#FFB347" letter-spacing="1">SEEK 5 S</text>
 <text x="1100" y="246" font-size="12" fill="#707078" letter-spacing="2">PRESS</text>
 <text x="1196" y="246" font-size="13.5" fill="#FFB347" letter-spacing="1">PLAY · PAUSE</text>
-<text x="1100" y="272" font-size="12" fill="#707078" letter-spacing="2">ALT</text>
-<text x="1196" y="272" font-size="13.5" fill="#A06A22" letter-spacing="1">PREV / NEXT · LIST</text>
-<text x="1100" y="298" font-size="12" fill="#707078" letter-spacing="2">GUIDE</text>
-<text x="1196" y="298" font-size="13.5" fill="#A06A22" letter-spacing="1">SIDEWAYS · PLAY</text>
+<text x="1100" y="272" font-size="12" fill="#707078" letter-spacing="2">GUIDE</text>
+<text x="1196" y="272" font-size="13.5" fill="#A06A22" letter-spacing="1">TIME · ENTER</text>
+<text x="1100" y="298" font-size="12" fill="#707078" letter-spacing="2">+ LAYER</text>
+<text x="1196" y="298" font-size="13.5" fill="#A06A22" letter-spacing="1">UP / DOWN · ALT ENTER</text>
 <circle cx="980" cy="536" r="94" fill="#050506"/>
 <circle cx="980" cy="530" r="94" fill="#34343A"/>
 <circle cx="980" cy="530" r="86" fill="none" stroke="#1E1E22" stroke-width="10" stroke-dasharray="2 3"/>
@@ -104,9 +104,41 @@
 <text x="1196" y="500" font-size="13.5" fill="#FFB347" letter-spacing="1">VOLUME</text>
 <text x="1100" y="526" font-size="12" fill="#707078" letter-spacing="2">PRESS</text>
 <text x="1196" y="526" font-size="13.5" fill="#FFB347" letter-spacing="1">MUTE</text>
-<text x="1100" y="552" font-size="12" fill="#707078" letter-spacing="2">ALT</text>
-<text x="1196" y="552" font-size="13.5" fill="#A06A22" letter-spacing="1">—</text>
-<text x="1100" y="578" font-size="12" fill="#707078" letter-spacing="2">GUIDE</text>
-<text x="1196" y="578" font-size="13.5" fill="#A06A22" letter-spacing="1">UP / DOWN · PLAY</text>
-<text x="110" y="750" font-size="12.5" fill="#707078" letter-spacing="2">KEYS 1–8 FOLLOW THE SOURCE YOU HEAR · IN A GUIDE: 1 GUIDE · 2 RECORDINGS · 3 PRESETS · 4 STREAMS · ALT + KNOB 2: VOLUME</text>
+<text x="1100" y="552" font-size="12" fill="#707078" letter-spacing="2">GUIDE</text>
+<text x="1196" y="552" font-size="13.5" fill="#A06A22" letter-spacing="1">UP / DOWN · ENTER</text>
+<text x="1100" y="578" font-size="12" fill="#707078" letter-spacing="2">+ LAYER</text>
+<text x="1196" y="578" font-size="13.5" fill="#A06A22" letter-spacing="1">VOLUME · ALT ENTER</text>
+<text x="110" y="750" font-size="12.5" fill="#707078" letter-spacing="2">TAP LAYER FOR THE NEXT LAYER · HOLD IT FOR TRANSPORT · BACK TO LAYER 1 AFTER 10 SECONDS · IN A GUIDE: 1–4 ITS PAGES</text>
+<text x="190.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">TRANSPORT</text>
+<text x="190.0" y="234.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">◀</text>
+<text x="190.0" y="288" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">PREV</text>
+<text x="372.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">TRANSPORT</text>
+<text x="372.0" y="234.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">▶</text>
+<text x="372.0" y="288" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">NEXT</text>
+<text x="554.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">TRANSPORT</text>
+<text x="554.0" y="234.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">▶ ‖</text>
+<text x="554.0" y="288" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">PLAY · PAUSE</text>
+<text x="736.0" y="178" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">TRANSPORT</text>
+<text x="736.0" y="234.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">■</text>
+<text x="736.0" y="288" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">STOP</text>
+<text x="190.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">GUIDE</text>
+<text x="190.0" y="416.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">REC</text>
+<text x="190.0" y="470" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">RECORDINGS</text>
+<text x="372.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">PICTURE</text>
+<text x="372.0" y="416.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">FULL</text>
+<text x="372.0" y="470" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">FULL SCREEN</text>
+<text x="554.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">SOUND</text>
+<text x="554.0" y="416.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">MUTE</text>
+<text x="736.0" y="360" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">STACK</text>
+<text x="736.0" y="416.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">POWER</text>
+<text x="736.0" y="470" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">ON · OFF</text>
+<text x="190.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">SOURCE</text>
+<text x="190.0" y="598.0" font-size="48" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">TV</text>
+<text x="372.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">SOURCE</text>
+<text x="372.0" y="598.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">RADIO</text>
+<text x="554.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">OPEN · CLOSE</text>
+<text x="554.0" y="598.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">GUIDE</text>
+<text x="736.0" y="542" font-size="12" fill="#707078" text-anchor="middle" letter-spacing="2.5">TAP · HOLD</text>
+<text x="736.0" y="598.0" font-size="32" font-weight="700" fill="#C9C9CE" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">LAYER</text>
+<text x="736.0" y="652" font-size="12.5" font-weight="700" fill="#FFB347" text-anchor="middle" letter-spacing="1.5">NOW 2 · TRANSPORT</text>
 </svg>

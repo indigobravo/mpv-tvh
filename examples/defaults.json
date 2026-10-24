@@ -1,0 +1,31 @@
+{
+  "tvheadend": {
+    "host": ""
+  },
+  "tv": {
+    "label": "TV",
+    "mpv_opts": [
+      "--no-fullscreen",
+      "--geometry=1400x788+1980+33",
+      "--ytdl=no"
+    ],
+    "panel_opts": [
+      "--geometry=1816x182+40+417"
+    ]
+  },
+  "radio": {
+    "label": "Radio",
+    "mpv_opts": [
+      "--force-window=yes",
+      "--geometry=1816x182+40+619",
+      "--no-border",
+      "--macos-app-activation-policy=accessory",
+      "--ytdl=no"
+    ]
+  },
+  "preamp": {
+    "panel_opts": [
+      "--geometry=1816x364+40+33"
+    ]
+  }
+}
